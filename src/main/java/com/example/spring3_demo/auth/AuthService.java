@@ -25,8 +25,8 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
             
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        UserDetails user= userRepository.findByUsername(request.getUsername())
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(deleteSigns(request.getUsername()), deleteSigns(request.getPassword())));
+        UserDetails user= userRepository.findByUsername(deleteSigns(request.getUsername()))
             .orElseThrow(() -> new RuntimeException("User not found"));
             String token = jwtService.getToken(user);
             return AuthResponse.builder()
@@ -37,11 +37,11 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
             
             User user = User.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .firstname(request.getFirstname())
-                .lastname(request.getLastname())
-                .country(request.getCountry())
+                .username(deleteSigns(request.getUsername()))
+                .password(passwordEncoder.encode(deleteSigns(request.getPassword())))
+                .firstname(deleteSigns(request.getFirstname()))
+                .lastname(deleteSigns(request.getLastname()))
+                .country(deleteSigns(request.getCountry()))
                 .role(Role.USER)
                 .build();
 
@@ -52,5 +52,11 @@ public class AuthService {
                 .build();
 
     }
+
+    private String deleteSigns(String s) { // Prevent SQL injection
+        return s.replaceAll("[^a-zA-Z0-9]", "");
+    }
+
+    
 
 }
